@@ -41,10 +41,10 @@ export const config = {
   },
   appointmentServiceRow: num('APPOINTMENT_SERVICE_ROW', 1),
   poll: {
-    minSeconds: num('POLL_MIN_SECONDS', 300),
-    maxSeconds: num('POLL_MAX_SECONDS', 900),
-    reloginEvery: num('RELOGIN_EVERY', 20),
-    maxConsecutiveErrors: num('MAX_CONSECUTIVE_ERRORS', 5),
+    minSeconds: num('POLL_MIN_SECONDS', 3300),
+    maxSeconds: num('POLL_MAX_SECONDS', 4200),
+    reloginEvery: num('RELOGIN_EVERY', 12),
+    maxConsecutiveErrors: num('MAX_CONSECUTIVE_ERRORS', 3),
   },
   browser: {
     headless: bool('HEADLESS', true),

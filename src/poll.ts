@@ -16,15 +16,21 @@ export type StepResult = 'ok' | 'error' | 'blocked' | 'stop'
 // Sleep time picked uniformly at random inside the configured window.
 // A fixed interval is the single strongest signal for "this is a bot":
 // real humans don't refresh at exactly the same cadence.
+const HOUR = 60 * 60
+const BLOCK_FLOOR_SECONDS = 2 * HOUR
+const BLOCK_CEILING_SECONDS = 12 * HOUR
+
 const nextDelaySeconds = (consecutiveErrors: number, wasBlocked: boolean): number => {
   const { minSeconds, maxSeconds } = config.poll
   const base = randomInt(minSeconds, maxSeconds)
   if (wasBlocked) {
-    // Exponential backoff capped at 2h after being blocked. Every further
-    // block doubles the wait, so if the IP is throttled we stop making it
-    // worse.
-    const backoff = Math.min(2 ** consecutiveErrors * base, 2 * 60 * 60)
-    return backoff
+    // Once we've detected a block, the goal is to stop making it worse.
+    // First block parks us for at least 2h; every subsequent consecutive
+    // block doubles the wait up to a 12h ceiling. Paired with a low
+    // MAX_CONSECUTIVE_ERRORS, the loop surrenders before a temporary
+    // throttle turns into a harder ban.
+    const scaled = BLOCK_FLOOR_SECONDS * 2 ** Math.max(0, consecutiveErrors - 1)
+    return Math.min(scaled, BLOCK_CEILING_SECONDS)
   }
   if (consecutiveErrors > 0) {
     return Math.min(base * (1 + consecutiveErrors), 2 * base)

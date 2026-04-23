@@ -74,9 +74,10 @@ Optional, but recommended:
 | Variable                 | Default      | Notes                                             |
 | ------------------------ | ------------ | ------------------------------------------------- |
 | `APPOINTMENT_SERVICE_ROW`| `1`          | `1` = passport, `2` = citizenship (usually)       |
-| `POLL_MIN_SECONDS`       | `300`        | Minimum gap between checks                        |
-| `POLL_MAX_SECONDS`       | `900`        | Maximum gap between checks                        |
-| `RELOGIN_EVERY`          | `20`         | Re-authenticate every N iterations                |
+| `POLL_MIN_SECONDS`       | `3300`       | Minimum gap between checks (~55 min)              |
+| `POLL_MAX_SECONDS`       | `4200`       | Maximum gap between checks (~70 min)              |
+| `RELOGIN_EVERY`          | `12`         | Re-authenticate every N iterations (~12h)         |
+| `MAX_CONSECUTIVE_ERRORS` | `3`          | Surrender this session after N errors/blocks      |
 | `HEADLESS`               | `true`       | Set `false` locally to watch it run               |
 | `BROWSER_LOCALE`         | `it-IT`      | Should match the account's expected locale       |
 | `BROWSER_TIMEZONE`       | `Europe/Rome`| Should match the account's expected timezone      |
@@ -112,22 +113,31 @@ Even with stealth enabled, a single residential IP that polls the same
 endpoint for weeks will eventually get throttled — that's what happened to
 @jmschp in
 [issue #2](https://github.com/Constantini21/Prenotami-Passport/issues/2).
+
+The defaults are deliberately polite: roughly **one check per hour** with
+jitter, re-login every ~12 hours, and a hard surrender after 3 consecutive
+errors or blocks. When a block page _is_ detected the loop parks for at
+least 2 hours and doubles up to a 12h ceiling on repeats — the goal is to
+stop making a temporary throttle worse.
+
 Practical things that help, in rough order of impact:
 
-1. **Poll slowly.** `POLL_MIN_SECONDS=300` (5 min) is already on the
-   aggressive side. For unattended long runs, `600`–`1800` is much safer.
-2. **Rotate IPs** with a residential proxy service. Avoid datacenter IPs
-   (Prenotami appears to block most of them) and Tor (the exit nodes are
-   banned outright).
+1. **Keep the polling polite.** Defaults are ~55–70 min between checks.
+   Slots don't disappear in 60 seconds and a tighter cadence is the single
+   fastest way to trip rate-limiting. If you drop below `900` seconds
+   expect to be throttled within hours.
+2. **Rotate IPs** with a residential proxy service if you're running on a
+   datacenter server (Hetzner, DO, AWS, etc.) — most datacenter IPs are
+   already blocked. Tor exit nodes are blocked outright.
 3. **Match locale and timezone** to where your account was created. An
    `it-IT` locale on a São Paulo IP is a tell.
 4. **Don't run multiple instances** against the same account or IP in
    parallel. The poll loop is designed to be a single watcher.
-5. **Stop when blocked.** When the block-detection fires, let the exponential
-   backoff do its job instead of restarting the process in a loop.
-6. **Prefer business hours** in the target timezone if you can — synthetic
-   24/7 traffic is easier to pick out of logs than someone refreshing during
-   their lunch break.
+5. **Stop when blocked.** The block-detection + exponential backoff already
+   do this; don't wrap the process in a restart loop that fights it.
+6. **Prefer business hours** in the target timezone if you can. A systemd
+   timer that only fires 08:00–20:00 Europe/Rome looks less synthetic than
+   a 24/7 runner.
 
 None of this makes detection impossible; it just raises the cost of getting
 singled out. The real fix is for the consulate to publish a saner booking
