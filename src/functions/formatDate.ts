@@ -1,10 +1,4 @@
-function padTo2Digits(num: number) {
-  return num.toString().padStart(2, '0')
-}
+const pad = (num: number) => num.toString().padStart(2, '0')
 
-
-export function formatDate(date: Date, separator?: string) {
-  return [padTo2Digits(date.getDate()), padTo2Digits(date.getMonth() + 1), date.getFullYear()].join(
-    separator || '/',
-  )
-}
+export const formatDate = (date: Date, separator = '/') =>
+  [pad(date.getDate()), pad(date.getMonth() + 1), date.getFullYear()].join(separator)

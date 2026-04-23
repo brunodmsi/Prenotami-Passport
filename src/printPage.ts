@@ -1,27 +1,39 @@
-import { webkit } from 'playwright'
+import path from 'path'
 
+import { config } from './config'
+import { logger } from './logger'
+import { launchSession } from './browser'
 import { auth } from './functions/auth'
-import { citizenshipAppointmentIsAvailable } from './functions/citizenship'
+import { checkAppointment } from './functions/appointment'
 import { logout } from './functions/logout'
+import { formatDate } from './functions/formatDate'
 
-import users from './constants/fakeUser'
-
+// One-shot: log in, check availability once, save a screenshot, log out.
+// Handy for debugging selectors and confirming the account still works
+// without starting the polling loop.
 const run = async () => {
-  const browser = await webkit.launch({ headless: false /* open browser */ })
-  const context = await browser.newContext({
-    viewport: {
-      width: 1490, // 1280 in commit 1ee6578
-      height: 700, // 720 in commit 1ee6578
-    },
-  })
+  const session = await launchSession()
+  const { page } = session
+  try {
+    await auth({ page, email: config.credentials.email, password: config.credentials.password })
 
-  const page = await context.newPage()
+    const outcome = await checkAppointment(page, {
+      serviceRow: config.appointmentServiceRow,
+      screenshotPrefix: config.credentials.email.replace(/[^a-z0-9]/gi, '_'),
+    })
 
-  for (let index = 0; index < users.length; index++) {
-    await auth({ page, email: users[index].email, password: users[index].password })
-    await citizenshipAppointmentIsAvailable(page, { filename: users[index].email })
+    logger.info('outcome:', outcome.status)
+
+    const fallback = path.resolve('screenshots', `run_${formatDate(new Date(), '_')}.png`)
+    await page.screenshot({ path: fallback, fullPage: true }).catch(() => {})
+
     await logout(page)
+  } finally {
+    await session.close()
   }
 }
 
-run()
+run().catch(err => {
+  logger.error('printPage failed:', (err as Error).message)
+  process.exit(1)
+})
