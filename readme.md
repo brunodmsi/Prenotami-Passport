@@ -169,6 +169,11 @@ src/
     └── telegram.ts       Telegram notifier (optional, falls back to logs)
 ```
 
+## Deployment
+
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for system requirements, a systemd
+unit example, and NixOS notes.
+
 ## Contributors
 
 - [Constantini](https://github.com/Constantini21/) — original author
