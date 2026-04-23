@@ -137,23 +137,23 @@ API.
 
 ```
 src/
-├── index.ts              Long-running orchestrator
-├── printPage.ts          One-shot login + screenshot
-├── config.ts             Typed env-var loader
-├── logger.ts             Minimal level-based logger
-├── browser.ts            Stealth Chromium factory + UA rotation
-├── humanize.ts           Randomised delays, typing, mouse wiggles
-├── poll.ts               Exponential-backoff polling loop
+├── index.ts               Long-running orchestrator
+├── print-page.ts          One-shot login + screenshot
+├── config.ts              Typed env-var loader
+├── logger.ts              Minimal level-based logger
+├── browser.ts             Stealth Chromium factory + UA rotation
+├── humanize.ts            Randomised delays, typing, mouse wiggles
+├── poll.ts                Exponential-backoff polling loop
 ├── constants/
-│   ├── locators.ts       CSS selectors + URLs
-│   └── messages.ts       Italian site strings + block fragments
+│   ├── locators.ts        CSS selectors + URLs
+│   └── messages.ts        Italian site strings + block fragments
 ├── functions/
-│   ├── auth.ts           goToLoginPage + userLogin wrapper
-│   ├── goToLoginPage.ts
-│   ├── userLogin.ts      Humanised login
+│   ├── auth.ts            go-to-login-page + user-login wrapper
+│   ├── go-to-login-page.ts
+│   ├── user-login.ts      Humanised login
 │   ├── logout.ts
-│   ├── appointment.ts    Unified availability check (passport/citizenship)
-│   └── formatDate.ts
+│   ├── appointment.ts     Unified availability check (passport/citizenship)
+│   └── format-date.ts
 └── services/
     └── telegram.ts       Telegram notifier (optional, falls back to logs)
 ```

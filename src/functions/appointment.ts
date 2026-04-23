@@ -8,7 +8,7 @@ import {
   serviceBookAnchor,
 } from '../constants/locators'
 import { BLOCK_FRAGMENTS, NO_AVAILABILITY_FRAGMENT } from '../constants/messages'
-import { formatDate } from './formatDate'
+import { formatDate } from './format-date'
 import { pauseMedium, pauseShort } from '../humanize'
 
 export type CheckOutcome =

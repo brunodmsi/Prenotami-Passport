@@ -18,7 +18,7 @@
     "start": "npm run build && node dist/src/index.js",
     "dev": "nodemon --ext ts --exec \"npm run build && node dist/src/index.js\"",
     "debug": "npm run build && node --inspect dist/src/index.js",
-    "printPage": "npm run build && node dist/src/printPage.js",
+    "printPage": "npm run build && node dist/src/print-page.js",
     "install-browsers": "playwright install chromium",
     "typecheck": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"

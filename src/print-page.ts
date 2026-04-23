@@ -6,7 +6,7 @@ import { launchSession } from './browser'
 import { auth } from './functions/auth'
 import { checkAppointment } from './functions/appointment'
 import { logout } from './functions/logout'
-import { formatDate } from './functions/formatDate'
+import { formatDate } from './functions/format-date'
 
 // One-shot: log in, check availability once, save a screenshot, log out.
 // Handy for debugging selectors and confirming the account still works

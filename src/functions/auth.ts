@@ -1,7 +1,7 @@
 import { Page } from 'playwright'
 
-import { goToLoginPage } from './goToLoginPage'
-import { userLogin } from './userLogin'
+import { goToLoginPage } from './go-to-login-page'
+import { userLogin } from './user-login'
 import { logger } from '../logger'
 
 export const auth = async ({
