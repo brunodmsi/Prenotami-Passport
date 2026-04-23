@@ -56,6 +56,7 @@ export const config = {
     token: optional('TELEGRAM_BOT_TOKEN'),
     chatIds,
     enabled: optional('TELEGRAM_BOT_TOKEN') !== '' && chatIds.length > 0,
+    notifyEveryCheck: bool('NOTIFY_EVERY_CHECK', false),
   },
   logLevel: optional('LOG_LEVEL', 'info'),
 } as const

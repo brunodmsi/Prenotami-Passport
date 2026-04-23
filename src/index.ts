@@ -46,9 +46,18 @@ const runOnce = async () => {
           await notify(`Prenotami: appointment slot may be available. Page saved to ${outPath}.`)
           return 'stop'
         }
-        case 'unavailable':
+        case 'unavailable': {
           logger.info(`no slots (iteration ${iteration})`)
+          // Always ping on the first iteration so the user can confirm the
+          // whole pipeline (login → check → notifier) works end-to-end
+          // within an hour of startup, without waiting for an actual hit.
+          // Every-check mode is opt-in because at ~1/hour it's 24+ pings/day.
+          const shouldPing = iteration === 1 || config.telegram.notifyEveryCheck
+          if (shouldPing) {
+            await notify(`Prenotami check #${iteration}: no slots available.`)
+          }
           return 'ok'
+        }
         case 'blocked':
           logger.warn('looks like we were blocked or rate-limited:', outcome.hint)
           await notify(`Prenotami: possible block detected ("${outcome.hint}") — backing off`)

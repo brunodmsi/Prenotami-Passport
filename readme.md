@@ -84,6 +84,7 @@ Optional, but recommended:
 | `PROXY_SERVER`           | _(none)_     | e.g. `http://user:pass@host:port`                 |
 | `TELEGRAM_BOT_TOKEN`     | _(none)_     | Empty disables Telegram; falls back to log output |
 | `TELEGRAM_CHAT_IDS`      | _(none)_     | Comma-separated list of chat IDs                  |
+| `NOTIFY_EVERY_CHECK`     | `false`      | Ping Telegram on every "no slots" result too      |
 | `LOG_LEVEL`              | `info`       | `debug` / `info` / `warn` / `error`               |
 
 ## Usage
