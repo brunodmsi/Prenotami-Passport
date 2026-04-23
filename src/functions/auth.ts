@@ -1,7 +1,8 @@
 import { Page } from 'playwright'
 
-import { goToLoginPage } from '../functions/goToLoginPage'
-import { userLogin } from '../functions/userLogin'
+import { goToLoginPage } from './go-to-login-page'
+import { userLogin } from './user-login'
+import { logger } from '../logger'
 
 export const auth = async ({
   page,
@@ -14,5 +15,5 @@ export const auth = async ({
 }) => {
   await goToLoginPage(page)
   await userLogin({ page, email, password })
-  console.log('auth')
+  logger.info('authenticated')
 }

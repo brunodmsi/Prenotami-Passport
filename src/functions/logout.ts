@@ -1,7 +1,11 @@
 import { Page } from 'playwright'
 
-import { LOGOUT_NAV } from '../constants/locators'
+import { LOGOUT_BUTTON } from '../constants/locators'
 
 export const logout = async (page: Page) => {
-    await page.locator(LOGOUT_NAV).click() 
+  const button = page.locator(LOGOUT_BUTTON)
+  if (await button.count()) {
+    await button.first().click().catch(() => {})
+    await page.waitForLoadState('load').catch(() => {})
+  }
 }
