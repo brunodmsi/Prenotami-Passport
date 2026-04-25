@@ -49,6 +49,74 @@ Defaults are polite: ~1 check/hour with jitter, surrender after 3 errors,
 2–12h backoff on detected blocks. **Do not tighten `POLL_MIN_SECONDS`
 without a residential proxy** — you'll get IP-throttled within hours.
 
+### Secrets via files (agenix, sops-nix, Docker secrets, LoadCredential)
+
+Every config variable accepts a `<NAME>_FILE` companion whose value is a
+path to a file containing the value. The file path wins over the inline
+env var. Trailing whitespace is stripped so the standard "echo > secret"
+trailing newline doesn't break login. Use this whenever the secret comes
+out of a secrets manager that produces single-value files.
+
+Example with agenix on NixOS:
+
+```nix
+# In your flake / configuration.nix
+age.secrets.prenotami-password = {
+  file = ./secrets/prenotami-password.age;
+  owner = "prenotami";
+  mode = "0400";
+};
+age.secrets.prenotami-telegram-token = {
+  file = ./secrets/prenotami-telegram-token.age;
+  owner = "prenotami";
+  mode = "0400";
+};
+
+systemd.services.prenotami = {
+  description = "Prenotami appointment checker";
+  after = [ "network-online.target" ];
+  wants = [ "network-online.target" ];
+  wantedBy = [ "multi-user.target" ];
+  serviceConfig = {
+    Type = "simple";
+    User = "prenotami";
+    WorkingDirectory = "/opt/prenotami";
+    ExecStart = "${pkgs.nodejs_20}/bin/node dist/src/index.js";
+    Restart = "on-failure";
+    RestartSec = 60;
+    RuntimeMaxSec = 86400;
+    # Pin the playwright-driver chromium so we don't run the broken
+    # pre-built binary playwright would otherwise download.
+    Environment = [
+      "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1"
+      "PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}"
+      "PRENOTAMI_EMAIL=you@example.com"
+      "PRENOTAMI_PASSWORD_FILE=/run/agenix/prenotami-password"
+      "TELEGRAM_BOT_TOKEN_FILE=/run/agenix/prenotami-telegram-token"
+      "TELEGRAM_CHAT_IDS=123456789"
+    ];
+  };
+};
+
+environment.systemPackages = [ pkgs.playwright-driver.browsers ];
+users.users.prenotami = { isSystemUser = true; group = "prenotami"; };
+users.groups.prenotami = {};
+```
+
+Or, if you'd rather keep the unit definition vanilla and use systemd's
+own credential plumbing instead of the agenix path directly:
+
+```ini
+LoadCredential=password:/run/agenix/prenotami-password
+LoadCredential=telegram-token:/run/agenix/prenotami-telegram-token
+Environment=PRENOTAMI_PASSWORD_FILE=%d/password
+Environment=TELEGRAM_BOT_TOKEN_FILE=%d/telegram-token
+```
+
+`%d` resolves to `$CREDENTIALS_DIRECTORY` at runtime — a per-service
+tmpfs mount, only readable by the service user. Cleaner than handing out
+the agenix path because the secret is namespaced to this unit.
+
 ## Run
 
 ```bash

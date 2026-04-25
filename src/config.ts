@@ -1,16 +1,41 @@
 import 'dotenv/config'
+import fs from 'fs'
+
+// For every config name, `<NAME>_FILE` can point at a file whose contents
+// are the value. The file path takes precedence over the inline env var.
+// This is the standard secrets pattern used by Docker secrets, Kubernetes,
+// systemd's LoadCredential, and agenix — the secret never has to land in
+// process env (which is readable via /proc/<pid>/environ by anything that
+// can stat the process). Trailing whitespace is stripped because most
+// secret-writing tools (echo, agenix, sops) tack on a newline.
+const readSecretFile = (path: string): string => {
+  try {
+    return fs.readFileSync(path, 'utf8').trim()
+  } catch (err) {
+    throw new Error(`Failed to read secret file at ${path}: ${(err as Error).message}`)
+  }
+}
+
+const fromEnvOrFile = (name: string): string | undefined => {
+  const filePath = process.env[`${name}_FILE`]?.trim()
+  if (filePath) return readSecretFile(filePath)
+  const value = process.env[name]
+  return value === undefined ? undefined : value.trim()
+}
 
 const required = (name: string): string => {
-  const value = process.env[name]
-  if (!value || value.trim() === '') {
-    throw new Error(`Missing required env var ${name}. Copy .env.example to .env and fill it in.`)
+  const value = fromEnvOrFile(name)
+  if (value === undefined || value === '') {
+    throw new Error(
+      `Missing required value ${name} (or ${name}_FILE). Copy .env.example to .env and fill it in.`,
+    )
   }
-  return value.trim()
+  return value
 }
 
 const optional = (name: string, fallback = ''): string => {
-  const value = process.env[name]
-  return value === undefined ? fallback : value.trim()
+  const value = fromEnvOrFile(name)
+  return value === undefined ? fallback : value
 }
 
 const num = (name: string, fallback: number): number => {
@@ -52,12 +77,15 @@ export const config = {
     timezone: optional('BROWSER_TIMEZONE', 'Europe/Rome'),
     proxyServer: optional('PROXY_SERVER'),
   },
-  telegram: {
-    token: optional('TELEGRAM_BOT_TOKEN'),
-    chatIds,
-    enabled: optional('TELEGRAM_BOT_TOKEN') !== '' && chatIds.length > 0,
-    notifyEveryCheck: bool('NOTIFY_EVERY_CHECK', false),
-  },
+  telegram: (() => {
+    const token = optional('TELEGRAM_BOT_TOKEN')
+    return {
+      token,
+      chatIds,
+      enabled: token !== '' && chatIds.length > 0,
+      notifyEveryCheck: bool('NOTIFY_EVERY_CHECK', false),
+    }
+  })(),
   logLevel: optional('LOG_LEVEL', 'info'),
 } as const
 
